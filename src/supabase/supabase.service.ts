@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { ConfigService } from '@nestjs/config'; // <-- dodaj
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SupabaseService {
@@ -13,12 +13,12 @@ export class SupabaseService {
     );
   }
 
+  get client() {
+    return this.supabase;
+  }
+
   async getUserById(userId: string) {
-    const { data, error } = await this.supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single<{ id: string; [key: string]: any }>();
+    const { data, error } = await this.supabase.auth.admin.getUserById(userId);
 
     if (error) {
       throw new Error(error.message);
