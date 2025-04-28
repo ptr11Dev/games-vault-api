@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateGameDto } from './create-game.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Games')
 @Controller('games')
@@ -16,6 +16,7 @@ export class GamesController {
 
   @Post()
   @ApiOperation({ summary: 'Add or update games (upsert)' })
+  @ApiBody({ type: [CreateGameDto] })
   async upsertGames(@Body() body: CreateGameDto[]) {
     const { data, error } = await this.supabaseService.client
       .from('games')
