@@ -75,6 +75,18 @@ export class UserGamesService {
     }
   }
 
+  async removeUserGame(userId: string, gameId: number): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('usergames')
+      .delete()
+      .eq('user_id', userId)
+      .eq('game_id', gameId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
   async getUserGames(userId: string): Promise<UserGame[]> {
     const { data, error } = (await this.supabaseService.client
       .from('usergames')

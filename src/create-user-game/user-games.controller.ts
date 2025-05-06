@@ -7,6 +7,7 @@ import {
   HttpException,
   HttpStatus,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { UserGamesService } from './user-games.service';
 import {
@@ -58,6 +59,23 @@ export class UserGamesController {
         userStatus,
       );
       return { message: 'Game status updated successfully' };
+    } catch (e) {
+      throw new HttpException(
+        e instanceof Error ? e.message : 'Unknown error',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Delete(':userId/:gameId')
+  @ApiOperation({ summary: 'Remove game from user library' })
+  async remove(
+    @Param('userId') userId: string,
+    @Param('gameId') gameId: number,
+  ) {
+    try {
+      await this.userGamesService.removeUserGame(userId, gameId);
+      return { message: 'Game removed from library' };
     } catch (e) {
       throw new HttpException(
         e instanceof Error ? e.message : 'Unknown error',
