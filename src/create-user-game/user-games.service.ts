@@ -87,8 +87,17 @@ export class UserGamesService {
     }
   }
 
-  async getUserGames(userId: string): Promise<UserGame[]> {
-    const { data, error } = (await this.supabaseService.client
+  async getUserGames(params: {
+    userId: string;
+    status?: GameUserStatus;
+    name?: string;
+    metacriticMin?: number;
+    sort?: 'name' | 'released' | 'updatedAt' | 'metacritic' | 'status';
+    direction?: 'asc' | 'desc';
+  }): Promise<UserGame[]> {
+    const { userId, ...filters } = params;
+
+    let query = this.supabaseService.client
       .from('usergames')
       .select(
         `
@@ -101,7 +110,30 @@ export class UserGamesService {
         )
       `,
       )
-      .eq('user_id', userId)) as unknown as {
+      .eq('user_id', userId);
+
+    if (filters.status) {
+      query = query.eq('user_status', filters.status);
+    }
+
+    if (filters.name) {
+      query = query.ilike('games.name', `%${filters.name}%`);
+    }
+
+    if (filters.metacriticMin !== undefined) {
+      query = query.gte('games.metacritic', filters.metacriticMin);
+    }
+
+    if (filters.sort === 'status') {
+      const direction = filters.direction === 'desc' ? 'desc' : 'asc';
+      query = query.order('user_status', { ascending: direction === 'asc' });
+    } else if (filters.sort === 'updatedAt') {
+      query = query.order('updated_at', {
+        ascending: filters.direction !== 'desc',
+      });
+    }
+
+    const { data, error } = (await query) as unknown as {
       data: UserGameRaw[];
       error: Error | null;
     };
@@ -110,26 +142,51 @@ export class UserGamesService {
       throw new Error(error.message);
     }
 
-    return (data ?? []).map((entry) => {
-      const game = entry.games;
+    const mapped = (data ?? [])
+      .filter((entry) => entry.games)
+      .map((entry) => {
+        const game = entry.games;
+        return {
+          id: game.id,
+          slug: game.slug,
+          name: game.name,
+          released: game.released ?? null,
+          tba: game.tba,
+          background_image: game.background_image ?? null,
+          rawg_rating: game.rawg_rating,
+          rawg_ratings_count: game.rawg_ratings_count,
+          metacritic: game.metacritic ?? null,
+          updated: game.updated,
+          platforms: game.platforms ?? null,
 
-      return {
-        id: game.id,
-        slug: game.slug,
-        name: game.name,
-        released: game.released ?? null,
-        tba: game.tba,
-        background_image: game.background_image ?? null,
-        rawg_rating: game.rawg_rating,
-        rawg_ratings_count: game.rawg_ratings_count,
-        metacritic: game.metacritic ?? null,
-        updated: game.updated,
-        platforms: game.platforms ?? null,
+          userStatus: entry.user_status,
+          createdAt: entry.created_at,
+          updatedAt: entry.updated_at,
+        };
+      });
 
-        userStatus: entry.user_status,
-        createdAt: entry.created_at,
-        updatedAt: entry.updated_at,
-      };
-    });
+    if (['name', 'released', 'metacritic'].includes(filters.sort ?? '')) {
+      const sortKey = filters.sort as keyof UserGame;
+      mapped.sort((a, b) => {
+        const aValue = a[sortKey];
+        const bValue = b[sortKey];
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return filters.direction === 'desc'
+            ? bValue.localeCompare(aValue)
+            : aValue.localeCompare(bValue);
+        }
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return filters.direction === 'desc'
+            ? bValue - aValue
+            : aValue - bValue;
+        }
+
+        return 0;
+      });
+    }
+
+    return mapped;
   }
 }

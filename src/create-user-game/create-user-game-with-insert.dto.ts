@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
   IsUUID,
   IsInt,
@@ -8,6 +7,7 @@ import {
   IsDateString,
   IsNumber,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserGameWithInsertDto {
   @ApiProperty({ example: 'b3b6a5ef-1234-4567-89ab-abcdef123456' })

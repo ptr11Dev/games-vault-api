@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Patch,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UserGamesService } from './user-games.service';
 import {
@@ -16,6 +17,7 @@ import {
   ApiParam,
   ApiCreatedResponse,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { CreateUserGameWithInsertDto } from './create-user-game-with-insert.dto';
 import { GameUserStatus } from './create-user-game.dto';
@@ -85,11 +87,35 @@ export class UserGamesController {
   }
 
   @Get(':userId')
-  @ApiOperation({ summary: 'Get all games for user by ID' })
+  @ApiOperation({ summary: 'Get all games for user with optional filters' })
   @ApiParam({ name: 'userId', type: 'string' })
-  async getAll(@Param('userId') userId: string) {
+  @ApiQuery({ name: 'status', required: false, enum: GameUserStatus })
+  @ApiQuery({ name: 'name', required: false, type: String })
+  @ApiQuery({ name: 'metacriticMin', required: false, type: Number })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    enum: ['name', 'released', 'updatedAt', 'metacritic', 'status'],
+  })
+  @ApiQuery({ name: 'direction', required: false, enum: ['asc', 'desc'] })
+  async getAll(
+    @Param('userId') userId: string,
+    @Query('status') status?: GameUserStatus,
+    @Query('name') name?: string,
+    @Query('metacriticMin') metacriticMin?: number,
+    @Query('sort')
+    sort?: 'name' | 'released' | 'updatedAt' | 'metacritic' | 'status',
+    @Query('direction') direction?: 'asc' | 'desc',
+  ) {
     try {
-      return await this.userGamesService.getUserGames(userId);
+      return await this.userGamesService.getUserGames({
+        userId,
+        status,
+        name,
+        metacriticMin,
+        sort,
+        direction,
+      });
     } catch (e) {
       throw new HttpException(
         e instanceof Error ? e.message : 'Unknown error',
