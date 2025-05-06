@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateUserGameDto } from './create-user-game.dto';
 import { UserGame, UserGameRaw } from './user-game.types';
+import { CreateUserGameWithInsertDto } from './create-user-game-with-insert.dto';
 
 @Injectable()
 export class UserGamesService {
@@ -17,6 +18,45 @@ export class UserGamesService {
     }
 
     return data;
+  }
+
+  async createUserGameWithInsert(
+    dto: CreateUserGameWithInsertDto,
+  ): Promise<void> {
+    const {
+      id,
+      slug,
+      name,
+      released,
+      tba,
+      background_image,
+      rawg_rating,
+      rawg_ratings_count,
+      metacritic,
+      updated,
+      platforms,
+      userId,
+    } = dto;
+
+    const { error } = await this.supabaseService.client.rpc('add_user_game', {
+      p_game_id: id,
+      p_slug: slug,
+      p_name: name,
+      p_released: released,
+      p_tba: tba,
+      p_background_image: background_image ?? null,
+      p_rawg_rating: rawg_rating,
+      p_rawg_ratings_count: rawg_ratings_count,
+      p_metacritic: metacritic ?? null,
+      p_updated: updated,
+      p_platforms: platforms ? JSON.stringify(platforms) : null,
+      p_user_id: userId,
+      p_user_status: 'wishlisted',
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   async getUserGames(userId: string): Promise<UserGame[]> {

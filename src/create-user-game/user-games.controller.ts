@@ -8,8 +8,14 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { UserGamesService } from './user-games.service';
-import { CreateUserGameDto } from './create-user-game.dto';
-import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiCreatedResponse,
+  ApiBody,
+} from '@nestjs/swagger';
+import { CreateUserGameWithInsertDto } from './create-user-game-with-insert.dto';
 
 @ApiTags('UserGames')
 @Controller('user-games')
@@ -17,11 +23,17 @@ export class UserGamesController {
   constructor(private readonly userGamesService: UserGamesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Add or update a game for user' })
-  @ApiBody({ type: CreateUserGameDto })
-  async add(@Body() body: CreateUserGameDto) {
+  @ApiOperation({
+    summary: 'Add new game and link to user library (wishlisted)',
+  })
+  @ApiCreatedResponse({
+    description: 'Game and user library entry created successfully.',
+  })
+  @ApiBody({ type: CreateUserGameWithInsertDto })
+  async createWithInsert(@Body() dto: CreateUserGameWithInsertDto) {
     try {
-      return await this.userGamesService.addUserGame(body);
+      await this.userGamesService.createUserGameWithInsert(dto);
+      return { message: 'Game and user library entry added successfully' };
     } catch (e) {
       throw new HttpException(
         e instanceof Error ? e.message : 'Unknown error',
@@ -34,7 +46,6 @@ export class UserGamesController {
   @ApiOperation({ summary: 'Get all games for user by ID' })
   @ApiParam({ name: 'userId', type: 'string' })
   async getAll(@Param('userId') userId: string) {
-    console.log('GET /user-games/:userId hit with id:', userId);
     try {
       return await this.userGamesService.getUserGames(userId);
     } catch (e) {

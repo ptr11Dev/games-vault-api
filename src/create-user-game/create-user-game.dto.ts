@@ -2,8 +2,8 @@ import { IsEnum, IsUUID, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum GameUserStatus {
-  WISHLIST = 'wishlist',
-  PLAYING = 'playing',
+  WISHLIST = 'wishlisted',
+  PLATINUM = 'platinum',
   COMPLETED = 'completed',
   ABANDONED = 'abandoned',
 }
