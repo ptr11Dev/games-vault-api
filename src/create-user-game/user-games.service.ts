@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CreateUserGameDto } from './create-user-game.dto';
+import { CreateUserGameDto, GameUserStatus } from './create-user-game.dto';
 import { UserGame, UserGameRaw } from './user-game.types';
 import { CreateUserGameWithInsertDto } from './create-user-game-with-insert.dto';
 
@@ -53,6 +53,22 @@ export class UserGamesService {
       p_user_id: userId,
       p_user_status: 'wishlisted',
     });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async updateUserGameStatus(
+    userId: string,
+    gameId: number,
+    userStatus: GameUserStatus,
+  ): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('usergames')
+      .update({ user_status: userStatus, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('game_id', gameId);
 
     if (error) {
       throw new Error(error.message);
