@@ -16,14 +16,4 @@ export class SupabaseService {
   get client() {
     return this.supabase;
   }
-
-  async getUserById(userId: string) {
-    const { data, error } = await this.supabase.auth.admin.getUserById(userId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  }
 }

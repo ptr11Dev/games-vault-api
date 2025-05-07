@@ -1,24 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CreateUserGameDto, GameUserStatus } from './create-user-game.dto';
+import { GameUserStatus } from './create-user-game.dto';
 import { UserGame, UserGameRaw } from './user-game.types';
 import { CreateUserGameWithInsertDto } from './create-user-game-with-insert.dto';
 
 @Injectable()
 export class UserGamesService {
   constructor(private readonly supabaseService: SupabaseService) {}
-
-  async addUserGame(dto: CreateUserGameDto) {
-    const { data, error } = await this.supabaseService.client
-      .from('usergames')
-      .upsert([dto], { onConflict: 'userId,gameId' });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  }
 
   async createUserGameWithInsert(
     dto: CreateUserGameWithInsertDto,

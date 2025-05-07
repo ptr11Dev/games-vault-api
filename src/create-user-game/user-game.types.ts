@@ -1,4 +1,4 @@
-import { AvailablePlatforms } from 'src/game/enums';
+import { AvailablePlatforms } from 'src/enums';
 import { GameUserStatus } from './create-user-game.dto';
 
 export type GameApi = {
