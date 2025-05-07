@@ -3,88 +3,26 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { GameUserStatus } from './create-user-game.dto';
 import { UserGame, UserGameRaw } from './user-game.types';
 import { CreateUserGameWithInsertDto } from './create-user-game-with-insert.dto';
+import { UserGamesFilter } from './types/user-games.types';
+import { DEFAULT_USER_STATUS } from './constants';
 
 @Injectable()
 export class UserGamesService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createUserGameWithInsert(
-    dto: CreateUserGameWithInsertDto,
-  ): Promise<void> {
-    const {
-      id,
-      slug,
-      name,
-      released,
-      tba,
-      background_image,
-      rawg_rating,
-      rawg_ratings_count,
-      metacritic,
-      updated,
-      platforms,
-      userId,
-    } = dto;
-
-    const { error } = await this.supabaseService.client.rpc('add_user_game', {
-      p_game_id: id,
-      p_slug: slug,
-      p_name: name,
-      p_released: released,
-      p_tba: tba,
-      p_background_image: background_image ?? null,
-      p_rawg_rating: rawg_rating,
-      p_rawg_ratings_count: rawg_ratings_count,
-      p_metacritic: metacritic ?? null,
-      p_updated: updated,
-      p_platforms: platforms ? JSON.stringify(platforms) : null,
-      p_user_id: userId,
-      p_user_status: 'wishlisted',
-    });
-
+  private handleSupabaseError(error: unknown): void {
+    if (error && typeof error === 'object' && 'message' in error) {
+      throw new Error(String(error.message));
+    }
     if (error) {
-      throw new Error(error.message);
+      throw new Error('An unknown error occurred');
     }
   }
 
-  async updateUserGameStatus(
+  private buildUserGamesQuery(
     userId: string,
-    gameId: number,
-    userStatus: GameUserStatus,
-  ): Promise<void> {
-    const { error } = await this.supabaseService.client
-      .from('usergames')
-      .update({ user_status: userStatus, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
-      .eq('game_id', gameId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-  }
-
-  async removeUserGame(userId: string, gameId: number): Promise<void> {
-    const { error } = await this.supabaseService.client
-      .from('usergames')
-      .delete()
-      .eq('user_id', userId)
-      .eq('game_id', gameId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-  }
-
-  async getUserGames(params: {
-    userId: string;
-    status?: GameUserStatus;
-    name?: string;
-    metacriticMin?: number;
-    sort?: 'name' | 'released' | 'updatedAt' | 'metacritic' | 'status';
-    direction?: 'asc' | 'desc';
-  }): Promise<UserGame[]> {
-    const { userId, ...filters } = params;
-
+    filters: Omit<UserGamesFilter, 'userId'>,
+  ) {
     let query = this.supabaseService.client
       .from('usergames')
       .select(
@@ -121,37 +59,78 @@ export class UserGamesService {
       });
     }
 
+    return query;
+  }
+
+  async createUserGameWithInsert(
+    dto: CreateUserGameWithInsertDto,
+  ): Promise<void> {
+    const { error } = await this.supabaseService.client.rpc('add_user_game', {
+      p_game_id: dto.id,
+      p_slug: dto.slug,
+      p_name: dto.name,
+      p_released: dto.released,
+      p_tba: dto.tba,
+      p_background_image: dto.background_image ?? null,
+      p_rawg_rating: dto.rawg_rating,
+      p_rawg_ratings_count: dto.rawg_ratings_count,
+      p_metacritic: dto.metacritic ?? null,
+      p_updated: dto.updated,
+      p_platforms: dto.platforms ? JSON.stringify(dto.platforms) : null,
+      p_user_id: dto.userId,
+      p_user_status: DEFAULT_USER_STATUS,
+    });
+
+    this.handleSupabaseError(error);
+  }
+
+  async updateUserGameStatus(
+    userId: string,
+    gameId: number,
+    userStatus: GameUserStatus,
+  ): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('usergames')
+      .update({ user_status: userStatus, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('game_id', gameId);
+
+    this.handleSupabaseError(error);
+  }
+
+  async removeUserGame(userId: string, gameId: number): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('usergames')
+      .delete()
+      .eq('user_id', userId)
+      .eq('game_id', gameId);
+
+    this.handleSupabaseError(error);
+  }
+
+  async getUserGames(params: UserGamesFilter): Promise<UserGame[]> {
+    const { userId, ...filters } = params;
+    const query = this.buildUserGamesQuery(userId, filters);
+
     const { data, error } = (await query) as unknown as {
       data: UserGameRaw[];
       error: Error | null;
     };
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    this.handleSupabaseError(error);
 
     const mapped = (data ?? [])
       .filter((entry) => entry.games)
-      .map((entry) => {
-        const game = entry.games;
-        return {
-          id: game.id,
-          slug: game.slug,
-          name: game.name,
-          released: game.released ?? null,
-          tba: game.tba,
-          background_image: game.background_image ?? null,
-          rawg_rating: game.rawg_rating,
-          rawg_ratings_count: game.rawg_ratings_count,
-          metacritic: game.metacritic ?? null,
-          updated: game.updated,
-          platforms: game.platforms ?? null,
-
-          userStatus: entry.user_status,
-          createdAt: entry.created_at,
-          updatedAt: entry.updated_at,
-        };
-      });
+      .map((entry) => ({
+        ...entry.games,
+        released: entry.games.released ?? null,
+        background_image: entry.games.background_image ?? null,
+        metacritic: entry.games.metacritic ?? null,
+        platforms: entry.games.platforms ?? null,
+        userStatus: entry.user_status,
+        createdAt: entry.created_at,
+        updatedAt: entry.updated_at,
+      }));
 
     if (['name', 'released', 'metacritic'].includes(filters.sort ?? '')) {
       const sortKey = filters.sort as keyof UserGame;
