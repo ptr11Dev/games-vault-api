@@ -6,6 +6,7 @@ export enum GameUserStatus {
   PLATINUM = 'platinum',
   COMPLETED = 'completed',
   ABANDONED = 'abandoned',
+  PLAYING = 'playing',
 }
 
 export class CreateUserGameDto {
