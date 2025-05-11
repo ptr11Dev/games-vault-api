@@ -138,6 +138,12 @@ export class UserGamesService {
         const aValue = a[sortKey];
         const bValue = b[sortKey];
 
+        if (sortKey === 'metacritic') {
+          if (aValue == null && bValue == null) return 0;
+          if (aValue == null) return 1;
+          if (bValue == null) return -1;
+        }
+
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           return filters.direction === 'desc'
             ? bValue.localeCompare(aValue)
