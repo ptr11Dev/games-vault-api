@@ -19,14 +19,9 @@ export class UserGamesService {
     }
   }
 
-  private buildUserGamesQuery(
-    userId: string,
-    filters: Omit<UserGamesFilter, 'userId'>,
-  ) {
-    let query = this.supabaseService.client
-      .from('usergames')
-      .select(
-        `
+  private buildUserGamesQuery(filters: UserGamesFilter) {
+    let query = this.supabaseService.client.from('usergames').select(
+      `
         user_status,
         created_at,
         updated_at,
@@ -35,8 +30,7 @@ export class UserGamesService {
           rawg_rating, rawg_ratings_count, metacritic, updated, platforms
         )
       `,
-      )
-      .eq('user_id', userId);
+    );
 
     if (filters.status) {
       query = query.eq('user_status', filters.status);
@@ -77,7 +71,6 @@ export class UserGamesService {
       p_metacritic: dto.metacritic ?? null,
       p_updated: dto.updated,
       p_platforms: dto.platforms ? JSON.stringify(dto.platforms) : null,
-      p_user_id: dto.userId,
       p_user_status: DEFAULT_USER_STATUS,
     });
 
@@ -85,32 +78,29 @@ export class UserGamesService {
   }
 
   async updateUserGameStatus(
-    userId: string,
     gameId: number,
     userStatus: GameUserStatus,
   ): Promise<void> {
     const { error } = await this.supabaseService.client
       .from('usergames')
       .update({ user_status: userStatus, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
       .eq('game_id', gameId);
 
     this.handleSupabaseError(error);
   }
 
-  async removeUserGame(userId: string, gameId: number): Promise<void> {
+  async removeUserGame(gameId: number): Promise<void> {
     const { error } = await this.supabaseService.client
       .from('usergames')
       .delete()
-      .eq('user_id', userId)
       .eq('game_id', gameId);
 
     this.handleSupabaseError(error);
   }
 
   async getUserGames(params: UserGamesFilter): Promise<UserGame[]> {
-    const { userId, ...filters } = params;
-    const query = this.buildUserGamesQuery(userId, filters);
+    const { ...filters } = params;
+    const query = this.buildUserGamesQuery(filters);
 
     const { data, error } = (await query) as unknown as {
       data: UserGameRaw[];

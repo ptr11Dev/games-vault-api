@@ -1,4 +1,4 @@
-import { IsEnum, IsUUID, IsNumber } from 'class-validator';
+import { IsEnum, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum GameUserStatus {
@@ -10,10 +10,6 @@ export enum GameUserStatus {
 }
 
 export class CreateUserGameDto {
-  @ApiProperty({ example: 'b3b6a5ef-1234-4567-89ab-abcdef123456' })
-  @IsUUID()
-  userId: string;
-
   @ApiProperty({ example: 662318 })
   @IsNumber()
   gameId: number;

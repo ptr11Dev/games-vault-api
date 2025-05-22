@@ -11,7 +11,6 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiParam,
   ApiCreatedResponse,
   ApiBody,
   ApiQuery,
@@ -41,44 +40,36 @@ export class UserGamesController {
     return { message: 'Game and user library entry added successfully' };
   }
 
-  @Patch(':userId/:gameId/status/:userStatus')
+  @Patch(':gameId/status/:userStatus')
   @HandleHttpErrors()
   @ApiOperation({ summary: 'Update user game status' })
   async updateStatus(
-    @Param('userId') userId: string,
     @Param('gameId') gameId: number,
     @Param('userStatus') userStatus: GameUserStatus,
   ) {
-    await this.userGamesService.updateUserGameStatus(
-      userId,
-      gameId,
-      userStatus,
-    );
+    await this.userGamesService.updateUserGameStatus(gameId, userStatus);
     return { message: 'Game status updated successfully' };
   }
 
-  @Delete(':userId/:gameId')
+  @Delete(':gameId')
   @HandleHttpErrors()
   @ApiOperation({ summary: 'Remove game from user library' })
-  async remove(
-    @Param('userId') userId: string,
-    @Param('gameId') gameId: number,
-  ) {
-    await this.userGamesService.removeUserGame(userId, gameId);
+  async remove(@Param('gameId') gameId: number) {
+    await this.userGamesService.removeUserGame(gameId);
     return { message: 'Game removed from library' };
   }
 
-  @Get(':userId')
+  @Get()
   @HandleHttpErrors()
-  @ApiOperation({ summary: 'Get all games for user with optional filters' })
-  @ApiParam({ name: 'userId', type: 'string' })
+  @ApiOperation({
+    summary: 'Get all games for current user with optional filters',
+  })
   @ApiQuery({ name: 'status', required: false, enum: GameUserStatus })
   @ApiQuery({ name: 'name', required: false, type: String })
   @ApiQuery({ name: 'metacriticMin', required: false, type: Number })
   @ApiQuery({ name: 'sort', required: false, enum: SORT_OPTIONS })
   @ApiQuery({ name: 'direction', required: false, enum: SORT_DIRECTIONS })
   async getAll(
-    @Param('userId') userId: string,
     @Query('status') status?: GameUserStatus,
     @Query('name') name?: string,
     @Query('metacriticMin') metacriticMin?: number,
@@ -86,7 +77,6 @@ export class UserGamesController {
     @Query('direction') direction?: (typeof SORT_DIRECTIONS)[number],
   ) {
     return await this.userGamesService.getUserGames({
-      userId,
       status,
       name,
       metacriticMin,

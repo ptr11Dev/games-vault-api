@@ -1,5 +1,4 @@
 import {
-  IsUUID,
   IsInt,
   IsString,
   IsBoolean,
@@ -10,10 +9,6 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserGameWithInsertDto {
-  @ApiProperty({ example: 'b3b6a5ef-1234-4567-89ab-abcdef123456' })
-  @IsUUID()
-  userId: string;
-
   @ApiProperty({ example: 3498 })
   @IsInt()
   id: number;
