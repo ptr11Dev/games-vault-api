@@ -39,6 +39,15 @@ export class CreateUserGameWithInsertDto {
   @IsString()
   background_image?: string;
 
+  @ApiProperty({
+    example:
+      'https://www.metacritic.com/game/horizon-forbidden-west-complete-edition/',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  meta_url?: string;
+
   @ApiProperty({ example: 4.47 })
   @IsNumber()
   rawg_rating: number;

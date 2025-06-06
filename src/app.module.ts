@@ -5,10 +5,13 @@ import { SupabaseService } from './supabase/supabase.service';
 import { UserGamesController } from './create-user-game/user-games.controller';
 import { UserGamesService } from './create-user-game/user-games.service';
 import { SupabaseTokenMiddleware } from './supabase/supabase-token.middleware';
+import { GamesModule } from './games/games.module';
+import { GamesController } from './games/games.controller';
+import { GamesService } from './games/games.service';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
-  controllers: [AppController, UserGamesController],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), GamesModule],
+  controllers: [AppController, UserGamesController, GamesController],
   providers: [
     {
       provide: SupabaseService,
@@ -16,6 +19,7 @@ import { SupabaseTokenMiddleware } from './supabase/supabase-token.middleware';
       scope: Scope.REQUEST,
     },
     UserGamesService,
+    GamesService,
   ],
 })
 export class AppModule implements NestModule {

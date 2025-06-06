@@ -26,7 +26,7 @@ export class UserGamesService {
         created_at,
         updated_at,
         games (
-          id, slug, name, released, tba, background_image,
+          id, slug, name, released, tba, background_image, meta_url,
           rawg_rating, rawg_ratings_count, metacritic, updated, platforms
         )
       `,
@@ -66,6 +66,7 @@ export class UserGamesService {
       p_released: dto.released,
       p_tba: dto.tba,
       p_background_image: dto.background_image ?? null,
+      p_meta_url: dto.meta_url ?? null,
       p_rawg_rating: dto.rawg_rating,
       p_rawg_ratings_count: dto.rawg_ratings_count,
       p_metacritic: dto.metacritic ?? null,
