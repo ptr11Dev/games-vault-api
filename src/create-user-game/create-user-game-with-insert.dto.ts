@@ -4,7 +4,6 @@ import {
   IsBoolean,
   IsOptional,
   IsDateString,
-  IsNumber,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -47,14 +46,6 @@ export class CreateUserGameWithInsertDto {
   @IsOptional()
   @IsString()
   meta_url?: string;
-
-  @ApiProperty({ example: 4.47 })
-  @IsNumber()
-  rawg_rating: number;
-
-  @ApiProperty({ example: 7076 })
-  @IsInt()
-  rawg_ratings_count: number;
 
   @ApiProperty({ example: 92, required: false })
   @IsOptional()

@@ -9,8 +9,6 @@ export type GameApi = {
   tba: boolean;
   background_image: string | null;
   meta_url: string | null;
-  rawg_rating: number;
-  rawg_ratings_count: number;
   metacritic: number | null;
   updated: string;
   platforms: AvailablePlatforms[] | null;
@@ -34,8 +32,6 @@ export type UserGameRaw = {
     tba: boolean;
     background_image: string | null;
     meta_url: string | null;
-    rawg_rating: number;
-    rawg_ratings_count: number;
     metacritic: number | null;
     updated: string;
     platforms: AvailablePlatforms[] | null;
